@@ -11,7 +11,7 @@ if (preg_match('/v.douyin.com\/(.*?)\//',$data,$match)){
 	if(preg_match('/playAddr: "(.*?)"/',$html['body'],$match)){
 	    $url = str_replace('aweme.snssdk.com/aweme/v1/playwm','aweme.snssdk.com/aweme/v1/play',$match[1]);
 	    $html = curlHelper($url,null,['user-agent:Aweme/26006 CFNetwork/902.2 Darwin/17.7.0']);
-	    return jok('获取无水印视频成功，是否立即打开查看？',$html['detail']['redirect_url']);
+	    return jok('获取无水印视频成功，是否立即打开查看？',str_replace('http://','https://',$html['detail']['redirect_url']));
 	}else{
 	    return jerr('没有查找到视频地址，请查看该抖音是否公开');
 	}
