@@ -20,12 +20,8 @@ if (preg_match('/v.douyin.com\/(.*?)\//',$data,$match)){
 }
 /**
  * 输出正常JSON
- *
- * 
 @param string 提示信息
- * 
 @param array  输出数据
- * 
 @return json
  */
 function  jok ($msg='success',$data=null){
@@ -39,12 +35,8 @@ function  jok ($msg='success',$data=null){
 }
 /**
  * 输出错误JSON
- *
- * 
 @param string 错误信息
- * 
 @param int 错误代码
- * 
 @return json
  */
 function  jerr ($msg='error',$code=500){
@@ -92,16 +84,16 @@ function  curlHelper ($url,$data=null,$header=[],$cookies="",$method='GET'){
 			curl_setopt($ch,CURLOPT_POSTFIELDS ,$data);
 			break ;
 		default :
-		}
-		curl_setopt($ch,CURLOPT_RETURNTRANSFER ,1);
-		curl_setopt($ch,CURLOPT_HEADER ,1);
-		$response=curl_exec($ch);
-		$output=[];
-		$headerSize=curl_getinfo($ch,CURLINFO_HEADER_SIZE );
-		// 根据头大小去获取头信息内容
-		$output['header']=substr($response,0,$headerSize);
-		$output['body']=substr($response,$headerSize,strlen($response)-$headerSize);
-		$output['detail']=curl_getinfo($ch);
-		curl_close($ch);
-		return $output;
 	}
+	curl_setopt($ch,CURLOPT_RETURNTRANSFER ,1);
+	curl_setopt($ch,CURLOPT_HEADER ,1);
+	$response=curl_exec($ch);
+	$output=[];
+	$headerSize=curl_getinfo($ch,CURLINFO_HEADER_SIZE );
+	// 根据头大小去获取头信息内容
+	$output['header']=substr($response,0,$headerSize);
+	$output['body']=substr($response,$headerSize,strlen($response)-$headerSize);
+	$output['detail']=curl_getinfo($ch);
+	curl_close($ch);
+	return $output;
+}
