@@ -24,7 +24,7 @@
         }
         .search {
             text-align: center;
-            padding-top: 200px;
+            padding-top: 120px;
             z-index: 99;
         }
         .search .form {
@@ -45,6 +45,11 @@
         .search .link {
             margin-top: 20px;
         }
+        .success {
+            text-align: center;
+            padding-top: 20px;
+            z-index: 99;
+        }
         </style>
     </head>
     
@@ -56,21 +61,34 @@
                     <el-button slot="append" icon="el-icon-search" @click="doPost">去水印</el-button>
                 </el-input>
             </div>
+            <div class="success" v-show="successShow">
+                <div style="color: rgb(49, 112, 143);padding: 15px">
+                    解析成功，请点击下载！
+                </div>
+                <el-button type="success"><a download="dy.mp4" :href="videoUrl" style="text-decoration:none;color: #ffffff">下载视频</a></el-button>
+                <el-button class="copy" type="primary"
+                           v-clipboard:copy="videoUrl"
+                           v-clipboard:success="onCopySuccess"
+                           v-clipboard:error="onCopyError">复制链接</el-button>
+                <el-button type="danger" @click="clear">清空</el-button>
+            </div>
         </div>
     </body>
     <script src="/static/js/vue-2.6.10.min.js"></script>
     <script src="/static/js/axios.min.js"></script>
     <script src="/static/js/element.js"></script>
+    <script src="/static/js/vue-clipboard.min.js"></script>
     <script>
     new Vue({
         el: '#app',
         data() {
             return {
-                keyword: ''
+                keyword: '',
+                videoUrl: '',
+                successShow: false
             }
         },
         created() {
-            var that = this;
         },
         updated() {},
         methods: {
@@ -79,15 +97,8 @@
                 axios.post('api.php', that.keyword)
                     .then(function (response) {
                     if (response.data.code == 200) {
-                        that.$confirm(response.data.msg, '去水印成功', {
-                            confirmButtonText: '确定',
-                            cancelButtonText: '取消',
-                            type: 'success'
-                        }).then(function(){
-                            window.open(response.data.data);
-                        }).
-                        catch (function(){
-                        });
+                        that.successShow = true;
+                        that.videoUrl = response.data.data;
                     } else {
                         that.$message.error(response.data.msg);
                     }
@@ -98,6 +109,16 @@
                     that.$message.error('出现异常，你可以控制台查看错误');
                 });
             },
+            clear(){
+                this.keyword = '';
+                this.successShow = false
+            },
+            onCopySuccess(e) {
+                this.$message({message:'复制成功！', type: 'success',duration:100000});
+            },
+            onCopyError(e) {
+                this.$message.error('复制失败！');
+            }
         }
     });
     </script>
