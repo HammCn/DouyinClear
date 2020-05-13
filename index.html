@@ -65,7 +65,7 @@
                 <div style="color: rgb(49, 112, 143);padding: 15px">
                     解析成功，请点击下载！
                 </div>
-                <el-button type="success"><a download="dy.mp4" :href="videoUrl" style="text-decoration:none;color: #ffffff">下载视频</a></el-button>
+                <el-button type="success"><a download="dy.mp4" :href="videoUrl" style="text-decoration:none;color: #ffffff" target="_blank">下载视频</a></el-button>
                 <el-button class="copy" type="primary"
                            v-clipboard:copy="videoUrl"
                            v-clipboard:success="onCopySuccess"
