@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 $data = file_get_contents('php://input');
 if(empty($data)){
     return jerr('请输入抖音复制的链接后操作');
@@ -7,11 +8,21 @@ if (preg_match('/v.douyin.com\/(.*?)\//',$data,$match)){
 	$url="https://v.douyin.com/".$match[1]."/";
 	$html = curlHelper($url);
 	$url = $html['detail']['redirect_url'];
-	$html = curlHelper($url,null,['user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36']);
-	if(preg_match('/playAddr: "(.*?)"/',$html['body'],$match)){
-	    $url = str_replace('aweme.snssdk.com/aweme/v1/playwm','aweme.snssdk.com/aweme/v1/play',$match[1]);
-	    $html = curlHelper($url,null,['user-agent:Aweme/26006 CFNetwork/902.2 Darwin/17.7.0']);
-	    return jok('获取无水印视频成功，是否立即下载？',str_replace('http://','https://',$html['detail']['redirect_url']));
+	if(preg_match('/video\/(.*?)\//',$url,$match_vid)){
+	    $video_id = $match_vid[1];
+    	$html = curlHelper("https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=".$video_id,null,['user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36']);
+    	$videoObj = json_decode($html['body'],true);
+    	if($videoObj['status_code']==0){
+    	    $videoUri = $videoObj['item_list'][0]['video']['play_addr']['url_list'][0];
+    	    if(!$videoUri){
+	            return jerr('解析JSON数据出现问题，获取失败');
+    	    }
+    	    $url = str_replace('aweme.snssdk.com/aweme/v1/playwm','aweme.snssdk.com/aweme/v1/play',$videoUri);
+    	    $html = curlHelper($url,null,['user-agent:Aweme/26006 CFNetwork/902.2 Darwin/17.7.0']);
+    	    return jok('获取无水印视频成功，是否立即下载？',str_replace('http://','https://',$html['detail']['redirect_url']));
+    	}else{
+    	    return jerr('没有查找到视频地址，请查看该抖音是否公开');
+    	}
 	}else{
 	    return jerr('没有查找到视频地址，请查看该抖音是否公开');
 	}
