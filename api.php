@@ -8,7 +8,7 @@ if (preg_match('/v.douyin.com\/(.*?)\//',$data,$match)){
 	$url="https://v.douyin.com/".$match[1]."/";
 	$html = curlHelper($url);
 	$url = $html['detail']['redirect_url'];
-	if(preg_match('/forward\/(.*?)\//',$url,$match_vid)){
+	if(preg_match('/video\/(.*?)\//',$url,$match_vid)){
 	    $video_id = $match_vid[1];
     	$html = curlHelper("https://www.douyin.com/web/api/v2/aweme/iteminfo/?item_ids=".$video_id,null,['']);
     	$videoObj = json_decode($html['body'],true);
@@ -17,21 +17,24 @@ if (preg_match('/v.douyin.com\/(.*?)\//',$data,$match)){
     	    if(!$videoUri){
 	            return jerr('解析JSON数据出现问题，获取失败');
     	    }
-    	    $forward_id = $videoObj['item_list'][0]['forward_id'];
-	    	$html = curlHelper("https://www.douyin.com/web/api/v2/aweme/iteminfo/?item_ids=".$forward_id,null,['']);
-        	$videoObj = json_decode($html['body'],true);
-        	if($videoObj['status_code']==0){
-        	    $videoUri = $videoObj['item_list'][0]['video']['play_addr']['url_list'][0];
-        	    if(!$videoUri){
-    	            return jerr('解析JSON数据出现问题，获取失败');
-        	    }
-        	    $url = str_replace('aweme.snssdk.com/aweme/v1/playwm','aweme.snssdk.com/aweme/v1/play',$videoUri);
-        	    $html = curlHelper($url,null,['user-agent:Aweme/26006 CFNetwork/902.2 Darwin/17.7.0']);
-        	    
-        	    return jok('获取无水印视频成功，是否立即下载？',str_replace('http://','https://',$html['detail']['redirect_url']));
-        	}else{
-        	    return jerr('没有查找到视频地址，请查看该抖音是否公开');
-        	}
+			$videoUri = str_replace('aweme.snssdk.com/aweme/v1/playwm','aweme.snssdk.com/aweme/v1/play',$videoUri);
+
+			$videlResultUrl = false;
+			for($i=0;$i<20;$i++){
+				//最多尝试20次获取
+				$html = curlHelper($videoUri);
+				if(!empty($html['body'])){
+					$html = $html['body'];
+					if(preg_match('/<a href="(.*?)">/',$html,$match_url)){
+						$videlResultUrl = $match_url[1];
+					}
+					break;
+				}
+			}
+			if(!$videlResultUrl){
+				return jerr('请复制到浏览器打开,如果白屏,请多次刷新尝试!',301,$videoUri);
+			}
+        	return jok('无水印视频获取成功!',$videlResultUrl);
     	}else{
     	    return jerr('没有查找到视频地址，请查看该抖音是否公开');
     	}
@@ -62,9 +65,9 @@ function  jok ($msg='success',$data=null){
 @param int 错误代码
 @return json
  */
-function  jerr ($msg='error',$code=500){
+function  jerr ($msg='error',$code=500,$data=false){
 	header("content:application/json;chartset=uft-8");
-	echo json_encode (["code"=>$code,"msg"=>$msg]);
+	echo json_encode (["code"=>$code,"msg"=>$msg,"data"=>$data??[]]);
 	die ;
 }
 function  curlHelper ($url,$data=null,$header=[],$cookies="",$method='GET'){
@@ -72,6 +75,7 @@ function  curlHelper ($url,$data=null,$header=[],$cookies="",$method='GET'){
 	curl_setopt($ch,CURLOPT_URL ,$url);
 	curl_setopt($ch,CURLOPT_SSL_VERIFYPEER ,false);
 	curl_setopt($ch,CURLOPT_SSL_VERIFYHOST ,false);
+	$header[] = 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36';
 	curl_setopt($ch,CURLOPT_HTTPHEADER ,$header);
 	curl_setopt($ch,CURLOPT_COOKIE ,$cookies);
 	switch ($method){
